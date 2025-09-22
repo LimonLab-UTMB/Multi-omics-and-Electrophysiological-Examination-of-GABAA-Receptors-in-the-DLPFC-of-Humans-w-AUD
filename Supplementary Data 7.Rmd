@@ -1,0 +1,380 @@
+---
+title: "Synaptic Proteomic Expression Analysis of Ionotropic Receptor Subunits, Trafficking, and Scaffolding Proteins in the Human Brain - 2025 Version"
+author: "Kevin Shen & Agenor Limon & Julia Granchi"
+output: html_notebook
+---
+
+description: The following write up includes the R code utilized in our analysis of the expression patterns of GABA-A Receptor subunits. 
+
+Download and install R Version 4.4.1 and RStudio Version 2024.09.1+394 .
+
+Download and install RStudio Vesion Rtool35.exe (12/12/2024).
+
+Install the required packages (only needs to be done once)
+```{r}
+#install packages ; I removed install.packages("xlsx") because it caused errors during install and library package downloading AND because it isn't necessary for to complete the code
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("readxl")
+install.packages("pheatmap")
+install.packages("ggplot2")
+install.packages("ggpubr")
+install.packages("Hmisc")
+install.packages("PerformanceAnalytics")
+install.packages("forcats")
+```
+Typical install time is about 0:30 - 1:00 depending on what packages and dependencies are already installed.
+
+Load the required packages (must be done for each new R session)
+```{r}
+#load packages
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(pheatmap)
+library(dendextend)
+library(ggplot2)
+library(ggpubr)
+library(Hmisc)
+library(PerformanceAnalytics)
+library(forcats)
+```
+Import dataset:
+```{r}
+d1 <- read_excel("./SynProt GABAAR Subunits 1.xlsx")
+d2 <- read_excel("./SynProt GABAAR Subunits 2.xlsx")
+
+# if you're having trouble with this step use getwd() to check the directory you're working from and then cross reference where your data files are currently located
+```
+First, pheatmap is used to generate an overview of the gene expression patterns across different regions of the brain.
+
+The mean expression level of each gene for each structure is calculated.
+
+Prepare for clustering of chosen transcripts in AUD samples.
+```{r}
+Heatmap_AUD <- d1 %>% #Generate data for heatmap
+  select(Protein, AUD905:AUD994) %>% #
+  group_by(Protein) %>% #Run all following functions in structure groups
+  summarise_all(list(mean = mean)) %>% #Calculate mean expression using list()
+  data.frame()
+
+rownames(Heatmap_AUD) <- paste0(Heatmap_AUD$Protein) #Define Y axis labels
+```
+
+Creation of chosen transcript dendrogram for control samples  
+```{r}
+Protein <- hclust(dist(Heatmap_AUD), method = "ward.D2") #Cluster structures using ward method like previously
+par(pin = c(10, 5))
+par(mar = c(5, 15, 1, 5))
+dendroAUD <- as.dendrogram(Protein) %>% plot(horiz = TRUE, main = "Clustering of structures for AUD subjects")  #Visualize clustering 
+```
+Prepare for clustering of chosen transcripts in control samples 
+```{r}
+Heatmap_CON <- d1 %>% #Generate data for heatmap
+  select(Protein, CON907:CON997) %>% #
+  group_by(Protein) %>% #Run all following functions in structure groups
+  summarise_all(list(mean = mean)) %>% #Calculate mean expression using list()
+  data.frame()
+
+rownames(Heatmap_CON) <- paste0(Heatmap_CON$Protein) #Define Y axis labels
+```
+
+Creation of chosen protein dendrogram for control samples 
+```{r}
+Protein <- hclust(dist(Heatmap_CON), method = "ward.D2") #Cluster structures using ward method like previously
+par(pin = c(10, 5))
+par(mar = c(5, 15, 1, 5))
+dendroAUD <- as.dendrogram(Protein) %>% plot(horiz = TRUE, main = "Clustering of structures for control subjects")  #Visualize clustering 
+```
+
+
+This next section will create a heatmap of gene expression for each experimental group 
+```{r}
+
+# Create annotations for gene role in the complex
+Complex_Annotation <- data.frame(classification = d1$Classification)
+rownames(Complex_Annotation) <- d1$Protein
+
+
+```
+
+Simple protein expression heat map comparing transcript levels of AUD and control samples without clustering data
+
+```{r}
+Heatmap <- d1 %>% #Generate data for heatmap
+  select(Protein, AUD905:CON997) %>% #
+  group_by(Protein) %>% #Run all following functions in structure groups
+  summarise_all(list(mean = mean)) %>% #Calculate mean expression using list()
+  data.frame()
+
+# Set the row names to the Protein names
+rownames(Heatmap) <- paste0(Heatmap$Protein)
+
+# Sort the rows by the Protein names alphabetically
+Heatmap_sorted <- Heatmap[order(rownames(Heatmap)), ]
+
+pheatmap(
+as.matrix(t(Heatmap_sorted[, -1])), # Convert the data frame (assuming Heatmap) to a matrix and remove the first column (possibly non-numeric)
+cluster_cols = FALSE,
+cluster_rows = FALSE,
+scale = "row",  # Normalize rows by subtracting the row mean and dividing by the row standard deviation
+color = colorRampPalette(c("cyan", "white", "orange"))(100),  # Color gradient from low to high
+show_colnames = TRUE,  # Show column names (genes)
+show_rownames = TRUE,
+annotation_col =Complex_Annotation,
+fontsize = 5,
+main = "Synaptic Protein Expression Heatmap for AUD and control subjects"  # Title for the heatmap
+)
+```
+
+
+Protein expression heat map comparing transcript levels of AUD and control samples with clustering data
+```{r}
+Heatmap <- d1 %>% #Generate data for heatmap
+  select(Protein, AUD905:CON997) %>% #
+  group_by(Protein) %>% #Run all following functions in structure groups
+  summarise_all(list(mean = mean)) %>% #Calculate mean expression using list()
+  data.frame()
+
+# Set the row names to the Protein names
+rownames(Heatmap) <- paste0(Heatmap$Protein)
+
+# Sort the rows by the Protein names alphabetically
+Heatmap_sorted <- Heatmap[order(rownames(Heatmap)), ]
+
+pheatmap(
+as.matrix(t(Heatmap_sorted[, -1])), # Convert the data frame (assuming Heatmap) to a matrix and remove the first column (possibly non-numeric)
+cluster_cols = TRUE,  # Cluster the columns (genes)
+clustering_distance_cols = "euclidean",  # Use Euclidean distance for column clustering (optional)
+clustering_method = "ward.D2",  # Method for hierarchical clustering (optional, can be "average", "single", etc.)
+scale = "row",  # Normalize rows by subtracting the row mean and dividing by the row standard deviation
+color = colorRampPalette(c("cyan", "white", "orange"))(100),  # Color gradient from low to high
+show_colnames = TRUE,  # Show column names (genes)
+show_rownames = TRUE,
+annotation_col =Complex_Annotation,
+fontsize = 5,
+main = "Synaptic Protein Expression Heatmap for AUD and control subjects"  # Title for the heatmap
+)
+
+```
+
+protein expression heat map of AUD samples with clustering data
+```{r}
+pheatmap(
+as.matrix(t(Heatmap_AUD[,-1])), # Convert the data frame (assuming Heatmap) to a matrix and remove the first column (possibly non-numeric)
+cluster_cols = TRUE,  # Cluster the columns (genes)
+clustering_distance_cols = "euclidean",  # Use Euclidean distance for column clustering (optional)
+clustering_method = "ward.D2",  # Method for hierarchical clustering (optional, can be "average", "single", etc.)
+scale = "row",  # Normalize rows by subtracting the row mean and dividing by the row standard deviation
+color = colorRampPalette(c("cyan", "white", "orange"))(100),  # Color gradient from low to high
+show_colnames = TRUE,  # Show column names (genes)
+annotation_col = Complex_Annotation,
+fontsize = 5,
+main = "Protein Expression Heatmap for AUD subjects"  # Title for the heatmap
+)
+
+```
+Protein expression heat map of Control samples with clustering data
+```{r}
+pheatmap(
+as.matrix(t(Heatmap_CON[,-1])), # Convert the data frame (assuming Heatmap) to a matrix and remove the first column (possibly non-numeric)
+cluster_cols = TRUE,  # Cluster the columns (genes)
+clustering_distance_cols = "euclidean",  # Use Euclidean distance for column clustering (optional)
+clustering_method = "ward.D2",  # Method for hierarchical clustering (optional, can be "average", "single", etc.)
+scale = "row",  # Normalize rows by subtracting the row mean and dividing by the row standard deviation
+color = colorRampPalette(c("cyan", "white", "orange"))(100),  # Color gradient from low to high
+show_colnames = TRUE,  # Show column names (genes)
+annotation_col = Complex_Annotation,
+fontsize = 5,
+main = "Synaptic Protein Expression Heatmap for CON subjects"  # Title for the heatmap
+)
+```
+
+
+This section puts the data columns of d2 into alphabetical order which has to be done in order for EDMCC data sheet to be built correctly
+```{r}
+subset_d2_columns <- 3:8 #columns you need to sort into alphabetical order; it should be column 3 to the end
+
+sorted_subset_d2 <- d2[, subset_d2_columns] %>% select(order(names(.))) 
+
+d2 <- bind_cols(d2[, 1:2], sorted_subset_d2) 
+
+```
+
+To match the changes you made in d2 This section puts the data rows of d1 into alphabetical order which has to be done in order for EDMCC data sheet to be built correctly
+
+```{r}
+d1 <- d1 %>% arrange(Protein) 
+```
+
+
+This section created a euclidian distance matrix with consensus to controls (EDMCC), and then charts the correlations of each samples to the EDMCC 
+
+```{r}
+
+controls <- data.frame((d2[d2$Dx == "Control", ]))
+
+# Pivoting columns A and B into a single column
+EDMCC <- controls %>%
+  pivot_longer(cols = c(GABRA1:GABRG2), 
+               names_to = "Variable", 
+               values_to = "EDMCC") %>%
+               arrange(Variable)  # Sort by the 'Variable' column alphabetically
+
+# Convert to a matrix (optional)
+EDMCC_matrix <- as.matrix(EDMCC$EDMCC)
+
+# If you want the result as a matrix with the 'Variable' as row names:
+EDMCC_matrix_with_variable <- matrix(EDMCC$EDMCC, nrow = length(EDMCC$EDMCC), 
+                                  dimnames = list(EDMCC$EDMCC, NULL))
+colnames(EDMCC_matrix_with_variable)[1] <- "EDMCC"
+
+# View the result
+print(EDMCC_matrix_with_variable)
+
+
+# Repeat each row 6 times
+expression_data_repeated <- d1 %>%
+  slice(rep(1:n(), each = sum(d2$Dx == "Control")))  # Repeat each row 6 times
+
+# View the result
+print(expression_data_repeated)
+
+#convert to matrix
+expression_data_repeated_matrix <- as.matrix(expression_data_repeated)
+
+expression_data_repeated_matrix_no_classification <- expression_data_repeated_matrix[,-2]
+
+#
+EDMCC_allsubjects <- cbind(EDMCC, expression_data_repeated_matrix_no_classification[,-1])
+
+#Remove the first three columns (e.g., metadata columns)
+EDMCC_allsubjects_expression_data_only <- EDMCC_allsubjects[, -c(1, 2, 3)]
+
+#Convert all remaining columns to numeric
+EDMCC_allsubjects_numeric <- apply(EDMCC_allsubjects_expression_data_only, 2, function(x) as.numeric(as.character(x)))
+
+#Ensure the result is a matrix in order to use chart.correlation
+EDMCC_allsubjects_numeric_matrix <- as.matrix(EDMCC_allsubjects_numeric)
+
+#Use chart.Correlation on the cleaned numeric data
+chart.Correlation(EDMCC_allsubjects_numeric_matrix)
+
+
+```
+separating data in the correlation matrix for statistical testing 
+
+```{r}
+# isolate the EDMCC correlation coefficients into a matrix that can be used to plot box plots 
+corr_matrix <- cor(EDMCC_allsubjects_numeric_matrix)
+print (corr_matrix)
+
+EDMCC_corr_coefficients <- as.matrix(corr_matrix[-1,"EDMCC"])
+
+colnames(EDMCC_corr_coefficients)[1] <- "EDMCC correlation coefficients"
+
+print(EDMCC_corr_coefficients)
+
+
+
+```
+
+
+code to properly label diagnoses for your samples 
+```{r}
+diagnosis <- c("AUD","AUD","AUD","AUD","AUD","AUD","AUD","AUD","AUD","AUD","CTRL","CTRL","CTRL","CTRL","CTRL","CTRL","CTRL","CTRL","CTRL")
+
+EDMCC_corr_coefficients_dx <- cbind(EDMCC_corr_coefficients, diagnosis)
+
+print(EDMCC_corr_coefficients_dx)
+
+
+```
+
+
+Running statistical tests:
+
+1. Normality test - Shapiro-wilks
+
+
+
+```{r}
+shapiro_wilks_results <- shapiro.test(EDMCC_corr_coefficients)
+
+print(shapiro_wilks_results)
+
+```
+
+2. F tests for the confirmation of equal or unqual variances 
+
+```{r}
+#separate data for experimental groups into separate data frames for analysis
+
+EDMCC_corr_coefficients_dx <- as.data.frame(EDMCC_corr_coefficients_dx)
+
+AUD <- data.frame(EDMCC_corr_coefficients_dx %>% filter(diagnosis == "AUD"))
+
+Ctrl <- data.frame(EDMCC_corr_coefficients_dx %>% filter(diagnosis == "CTRL"))
+
+F_test_results <- var.test(as.numeric(AUD$EDMCC.correlation.coefficients),as.numeric(Ctrl$EDMCC.correlation.coefficients))
+
+print(F_test_results)
+
+```
+
+3. Based on the results of the shapiro wilks and f test - parametric or nonparmetric for equal or unqual variances testing for significant differences between means  
+```{r}
+
+MannWhitney_results <- wilcox.test(as.numeric(AUD$EDMCC.correlation.coefficients), as.numeric(Ctrl$EDMCC.correlation.coefficients))
+
+print(MannWhitney_results)
+
+# Create a data frame to store the results for stat_pvalue_manual ; rounding the p value to 3 decimal places
+
+MannWhitney_results_df <- data.frame(
+  group1 = "AUD", 
+  group2 = "CTRL", 
+  p = round(MannWhitney_results$p.value, 3)
+)
+
+```
+
+
+
+Next we'll plot this information onto a violin plot 
+```{r}
+
+EDMCC_corr_coefficients_dx$`EDMCC correlation coefficients` <- as.numeric(EDMCC_corr_coefficients_dx$`EDMCC correlation coefficients`)
+
+ggplot(EDMCC_corr_coefficients_dx, aes(x = diagnosis, y = EDMCC_corr_coefficients_dx$`EDMCC correlation coefficients`, color = diagnosis)) +
+  geom_jitter(
+    width = 0.1,  # Optional: adjust the spread of jitter
+    alpha = 0.6   # Optional: adjust transparency of points
+  ) +
+  geom_violin(
+    width = 0.4,  # Optional: adjust the width of the boxplot
+    outlier.shape = NA,  # Optional: remove the outliers from the boxplot display
+    aes(fill = diagnosis),  # Apply the fill color by diagnosis
+    alpha = 0.3  # Make the boxplot a little transparent
+  ) +
+   stat_pvalue_manual(
+    MannWhitney_results_df, 
+    label = "p = {p}",  # Format the label to show p-value
+    y.position = max(EDMCC_corr_coefficients_dx$`EDMCC correlation coefficients`) * 1.2,  # Adjust position for annotation
+    size = 5  # Adjust size of p-value label
+  ) +
+  scale_color_manual(values = c("AUD" = "red", "CTRL" = "blue")) +  # Customize point colors
+  scale_fill_manual(values = c("AUD" = "red", "CTRL" = "blue")) +   # Customize boxplot colors
+  labs(
+    title = NULL,
+    x = "Diagnosis",
+    y = "EDMCC Correlation Coefficients"
+  ) +
+  theme_minimal()
+
+
+```
+
+```
+
+
