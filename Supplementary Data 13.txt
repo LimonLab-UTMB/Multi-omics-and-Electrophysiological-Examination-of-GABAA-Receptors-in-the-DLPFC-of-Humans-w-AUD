@@ -1,0 +1,199 @@
+#Title: Calculate Cliff's delta - multi-omic data
+#Description: This code was used to calculate a Cliff's delta value for during our power analyses of our results that that followed a non-normal distribution
+# R version used: 4.4.1
+
+install.packages("effsize")
+library(effsize)
+
+#Multi-omic Data
+#Cliff's Delta for GABRD (TPM) transcript analysis 
+
+delta_CTRL = c(7134,
+               6415,
+               5294,
+               5257,
+               2945,
+               5513,
+               4798) 
+delta_AUD = c(4369,
+              4052,
+              4235,
+              4721,
+              191,
+              3185,
+              5641,
+              4556)
+
+cliff.delta(delta_CTRL, delta_AUD)
+
+
+#Cliff's Delta for Reorganization/Euclidian Distance Analysis - GABAAR Subunit Transcripts
+
+trans_sub_reorg_CTRL = c(0.940286984,
+                         0.945539643,
+                         0.912299442,
+                         0.946502285,
+                         0.941571707,
+                         0.945963839,
+                         0.944886826)
+
+trans_sub_reorg_AUD = c(0.914011948,
+                        0.927780251,
+                        0.941634127,
+                        0.929190894,
+                        0.292991913,
+                        0.880652553,
+                        0.810678763,
+                        0.899154988)
+
+cliff.delta(trans_sub_reorg_CTRL, trans_sub_reorg_AUD)
+
+#Cliff's Delta for Reorganization/Euclidian Distance Analysis - GABAAR Subunit proteins
+
+prots_sub_reorg_CTRL = c(0.766099,
+                         0.764709,
+                         0.388368,
+                         0.713626,
+                         0.625461,
+                         0.766827,
+                         0.763935)
+
+prots_sub_reorg_AUD = c(0.722264,
+                        0.747468,
+                        0.469766,
+                        0.685537,
+                        0.493424,
+                        0.454264,
+                        0.401441,
+                        0.746606)
+
+cliff.delta(prots_sub_reorg_CTRL, prots_sub_reorg_AUD)
+
+#Cliff's Delta for Significance testing ACAA2 Protein Expression 
+
+ACAA2_CTRL = c(28.94907935,
+               28.82311071,
+               29.17343225,
+               28.98890468,
+               27.40889753,
+               28.97932317,
+               28.59423952)
+
+ACAA2_AUD = c(29.03265955,
+              29.06793059,
+              29.17773918,
+              29.29067599,
+              29.27298365,
+              29.46827548,
+              28.9853181,
+              29.08390554)
+
+cliff.delta(ACAA2_CTRL, ACAA2_AUD)
+
+#Cliff's Delta for Significance testing reorganization/Euclidian Distance Analysis - GABAAR Subunit synaptic proteins
+
+synprots_sub_reorg_CTRL = c(0.560642,
+                            0.651679,
+                            0.522788,
+                            0.739266,
+                            0.694115,
+                            0.718889,
+                            0.756016,
+                            0.73719,
+                            0.734989)
+
+synprots_sub_reorg_AUD = c(0.611194,
+                           0.595348,
+                           0.542254,
+                           0.717817,
+                           0.733859,
+                           0.689744,
+                           0.632817,
+                           0.725284,
+                           0.71214,
+                           0.729883)
+
+cliff.delta(synprots_sub_reorg_CTRL, synprots_sub_reorg_AUD)
+
+#Cliff's Delta for Significance testing reorganization/Euclidian Distance Analysis - GABAAR trafficking synaptic proteins
+traf
+synprots_traf_reorg_CTRL = c(0.9788771,
+                            0.9788704,
+                            0.9781216,
+                            0.9780738,
+                            0.9568169,
+                            0.9787861,
+                            0.9785094,
+                            0.976737,
+                            0.9782535)
+
+synprots_traf_reorg_AUD = c(0.9780483,
+                           0.9764404,
+                           0.9785421,
+                           0.9786097,
+                           0.9739763,
+                           0.9788272,
+                           0.9729163,
+                           0.9786564,
+                           0.9774086,
+                           0.9774292)
+
+cliff.delta(synprots_traf_reorg_CTRL, synprots_traf_reorg_AUD)
+
+#Electrophysiology Data
+#Cliff's Delta for Raw GABAAR Amplitudes to 1mM GABA
+
+raw_CTRL = c(6.175378803, 39.9594338, 41.77395627, 365.6620582, 65.06532431, 14.63433733, 128.78526, 285.7830326) 
+raw_AUD = c(22.49551693, 124.9526615, 83.22312126, 115.459611, 26.01416037, 119.7989415, 8.252049486, 256.9270829)
+
+cliff.delta(raw_CTRL, raw_AUD)
+
+
+cliff.delta(norm_CTRL, norm_AUD)
+
+#Cliff's Delta for Max Decay Slope -> curve fitting results for kinetics analysis  
+
+MaxDecaySlope_CTRL = c(0.000289962,
+                       0.000600219,
+                       0.000641025,
+                       0.001985192,
+                       0.001984179,
+                       0.001754968,
+                       0.000345923,
+                       0.001881858)
+
+MaxDecaySlope_AUD = c(0.000224019,
+                      0.00335705,
+                      0.00016804,
+                      0.000213654,
+                      0.001781185,
+                      0.001129369,
+                      0.002187828,
+                      0.000366212)
+
+
+cliff.delta(MaxDecaySlope_CTRL, MaxDecaySlope_AUD)
+
+#Cliff's delta for average EC50 results from nonlinear regression with normalized responses
+
+EC50_CTRL = c(0.0000193,
+              0.0000919,
+              0.0000542,
+              0.0000776,
+              0.0000698,
+              0.00000527,
+              0.000049,
+              0.0000407)
+
+EC50_AUD = c(0.0001031,
+             0.0001403,
+             0.0000556,
+             0.0000664,
+             0.000051,
+             0.0000477,
+             0.0000682,
+             0.0000489)
+
+
+cliff.delta(EC50_CTRL, EC50_AUD)
+
