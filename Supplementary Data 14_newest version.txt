@@ -1,0 +1,42 @@
+#Title: Converting Cliff's delta to Cohen's d - multi-omic data
+#Description: This code was used to calculate a Cliff's delta values of our multi-omic data to a Cohen's d value that can be used in a power analysis
+# R version used: 4.4.1
+
+
+
+#1. Define the Conversion Function
+convert_cliff_delta_to_cohens_d = function(cliff_delta_value) {
+  # Basic check to ensure the input is within the valid range for Cliff's Delta
+  if (cliff_delta_value < -1 || cliff_delta_value > 1) {
+    stop("Error: Cliff's Delta must be between -1 and 1.")
+  }
+  
+  # The core conversion formula ; qnorm is thw quantile function of the normal distribution
+  cohens_d_result = sqrt(2) * qnorm((cliff_delta_value + 1) / 2)
+  
+  return(cohens_d_result)
+}
+
+# 2. Plug in Your Cliff's Delta Value Here 
+
+#Multi-omic data
+GABRD_cliffsdelta = 0.607
+GABAAR_sub_trans_reorg = 0.786 
+GABAAR_sub_prot_reorg = 0.462
+ACAA2_prot = -0.821
+GABAAR_sub_synprot_reorg = 0.267
+GABAAR_traf_synprot_reorg = 0.244
+
+#Electrophysiology data
+GABAAR_ampl = 0.031
+
+
+
+# --- 3. Run the Conversion ---
+# Call the function with your value to get the estimated Cohen's d.
+estimated_cohens_d = convert_cliff_delta_to_cohens_d(delta_delta) #add a single cliff's delta value defined in #2. in the delta_delta spot
+
+# --- 4. Display the Result ---
+# Print the estimated Cohen's d to your console.
+cat("Your Cliff's Delta value:", delta_delta, "\n") #add a single cliff's delta value defined in #2. in the delta_delta spot
+cat("Estimated Cohen's d:", estimated_cohens_d, "\n\n")
